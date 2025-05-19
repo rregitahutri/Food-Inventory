@@ -299,21 +299,40 @@ func pencarianCepat(data []BahanMakanan, nama string) int {
 	return found
 }
 
-func binerSearch(data []BahanMakanan) { // Ubah parameter menjadi slice data
+func sequentialSearch(data []BahanMakanan, nama string) int {
+	for i, bahan := range data {
+		if strings.ToLower(bahan.nama) == strings.ToLower(nama) {
+			return i
+		}
+	}
+	return -1
+}
+
+func binerSearch(data []BahanMakanan) {
 	var pilihCari int
 	fmt.Println("Pilih opsi pencarian")
-	fmt.Println("1. Pencarian Cepat")
-	fmt.Println("2. Pencarian Biasa")
+	fmt.Println("1. Pencarian Cepat (Binary Search)")
+	fmt.Println("2. Pencarian Biasa (Sequential Search)")
 	fmt.Print("Pilih : ")
 	fmt.Scan(&pilihCari)
 
 	switch pilihCari {
 	case 1:
+		// Urutkan data terlebih dahulu
+		sorted := sortByNama(data)
+		fmt.Println("\nData Bahan Makanan (Terurut berdasarkan Nama):")
+		fmt.Println("===============================================")
+		fmt.Printf("%-3s | %-15s | %-5s | %-15s\n", "No.", "Nama Bahan", "Stok", "Kadaluwarsa")
+		fmt.Println("===============================================")
+		for i, bahan := range sorted {
+			fmt.Printf("%-3d | %-15s | %-5d | %-15s\n", i+1, bahan.nama, bahan.stok, bahan.kadaluwarsa)
+		}
+		fmt.Println("===============================================")
+
 		var cariNama string
-		fmt.Println("Masukkan nama bahan makanan yang dicari: ")
+		fmt.Print("\nMasukkan nama bahan makanan yang dicari: ")
 		fmt.Scan(&cariNama)
 
-		sorted := sortByNama(data)
 		index := pencarianCepat(sorted, cariNama)
 
 		if index != -1 {
@@ -325,9 +344,25 @@ func binerSearch(data []BahanMakanan) { // Ubah parameter menjadi slice data
 		} else {
 			fmt.Println("Data tidak ditemukan.")
 		}
+
 	case 2:
-		// Implementasi pencarian biasa
-		fmt.Println("Pencarian biasa belum diimplementasikan")
+		var cariNama string
+		fmt.Print("Masukkan nama bahan makanan yang dicari: ")
+		fmt.Scan(&cariNama)
+
+		index := sequentialSearch(data, cariNama)
+
+		if index != -1 {
+			fmt.Println("\nHasil Pencarian")
+			fmt.Println("---------------------------")
+			fmt.Printf("Nama Bahan Makanan : %s\n", data[index].nama)
+			fmt.Printf("Stok               : %d\n", data[index].stok)
+			fmt.Printf("Kadaluwarsa        : %s\n\n", data[index].kadaluwarsa)
+		} else {
+			fmt.Println("Data tidak ditemukan.")
+		}
+	default:
+		fmt.Println("Pilihan tidak valid")
 	}
 }
 
@@ -335,12 +370,12 @@ func main() {
 	var pilihMenu int
 
 	data := []BahanMakanan{
-		{"Beras", 10, "2025-05-09"},
+		{"Minyak", 3, "2026-03-02"},
 		{"Gula", 2, "2025-05-15"},
 		{"Kopi", 12, "2026-09-09"},
-		{"Minyak", 3, "2026-03-02"},
 		{"Minyak", 6, "2025-05-27"},
 		{"Telur", 0, "2025-05-27"},
+		{"Beras", 10, "2025-05-09"},
 	}
 
 	for {
