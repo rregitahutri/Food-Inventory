@@ -259,10 +259,25 @@ func hapusData(data *[]BahanMakanan) {
 	fmt.Printf("\n✅ Bahan makanan '%s' berhasil dihapus\n", bahanTerhapus)
 }
 
-func laporanStok() {
-	fmt.Println("=== Laporan Stok Bahan Makanan ===")
-	fmt.Println("Total Bahan Makanan Tersedia:")
-	fmt.Println("Total Bahan Makanan yang telah Digunakan:")
+func laporanStok(data []BahanMakanan) {
+	total := len(data)
+	digunakan := 0
+	tersedia := 0
+
+	for _, bahan := range data {
+		if bahan.stok == 0 {
+			digunakan++
+		} else {
+			tersedia++
+		}
+	}
+
+	fmt.Println("\n📦 Laporan Stok Bahan Makanan")
+	fmt.Println("===============================================")
+	fmt.Printf("Total Bahan Makanan        : %d\n", total)
+	fmt.Printf("Bahan Tersedia (stok > 0)  : %d\n", tersedia)
+	fmt.Printf("Bahan Telah Digunakan      : %d\n", digunakan)
+	fmt.Println("===============================================")
 }
 
 func sortByNama(data []BahanMakanan) []BahanMakanan {
@@ -313,6 +328,7 @@ func binerSearch(data []BahanMakanan) {
 	fmt.Println("Pilih opsi pencarian")
 	fmt.Println("1. Pencarian Cepat (Binary Search)")
 	fmt.Println("2. Pencarian Biasa (Sequential Search)")
+	fmt.Println("3. Kembali ke Menu Utama")
 	fmt.Print("Pilih : ")
 	fmt.Scan(&pilihCari)
 
@@ -361,8 +377,24 @@ func binerSearch(data []BahanMakanan) {
 		} else {
 			fmt.Println("Data tidak ditemukan.")
 		}
+	case 3:
+		return
 	default:
 		fmt.Println("Pilihan tidak valid")
+	}
+}
+
+func konfirmasiKembali() bool {
+	var input string
+	for {
+		fmt.Print("\nApakah Anda ingin kembali ke menu utama? (y/n): ")
+		fmt.Scanln(&input)
+		if strings.ToLower(input) == "y" {
+			return true
+		} else if strings.ToLower(input) == "n" {
+			return false
+		}
+		fmt.Println("Input tidak valid, silakan masukkan y atau n")
 	}
 }
 
@@ -406,18 +438,39 @@ func main() {
 		switch pilihMenu {
 		case 1:
 			daftarBahanMakanan(data)
+			if !konfirmasiKembali() {
+				continue
+			}
 		case 2:
 			tambahData(&data)
+			if !konfirmasiKembali() {
+				continue
+			}
 		case 3:
 			ubahData(&data)
+			if !konfirmasiKembali() {
+				continue
+			}
 		case 4:
 			hapusData(&data)
+			if !konfirmasiKembali() {
+				continue
+			}
 		case 5:
-			binerSearch(data) // Panggil fungsi dengan parameter data
+			binerSearch(data)
+			if !konfirmasiKembali() {
+				continue
+			}
 		case 6:
-			laporanStok()
+			laporanStok(data)
+			if !konfirmasiKembali() {
+				continue
+			}
 		default:
 			fmt.Println("Menu tidak valid")
+			if !konfirmasiKembali() {
+				continue
+			}
 		}
 	}
 }
