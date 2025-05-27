@@ -12,43 +12,50 @@ type BahanMakanan struct {
 	kadaluwarsa string
 }
 
-func tampilkanReminder(bahanMakanans []BahanMakanan) {
-	// Hitung jumlah bahan yang perlu diingatkan
+func tampilkanReminder(bahanMakanann []BahanMakanan) {
 	var count int
-	var bahanKadaluwarsa []BahanMakanan
 
-	fmt.Println("\n🔔 Peringatan Kadaluwarsa Bahan Makanan:")
-	fmt.Println("===============================================")
+	// Header
+	fmt.Println("┌───────────────────────────────────────────────────────────┐")
+	fmt.Println("│        ⚠️  PERINGATAN KADALUWARSA BAHAN MAKANAN ⚠️          │")
+	fmt.Println("├──────┬────────────────┬──────────────────────┬────────────┤")
+	fmt.Println("│ No.  │ Nama Bahan     │ Status               │ Kadaluwarsa│")
+	fmt.Println("├──────┼────────────────┼──────────────────────┼────────────┤")
 
-	for _, bahan := range bahanMakanans {
+	today := time.Now().Truncate(24 * time.Hour)
+
+	for i, bahan := range bahanMakanann {
 		kadaluwarsa, err := time.Parse("2006-01-02", bahan.kadaluwarsa)
 		if err != nil {
-			continue // Lewati jika format tanggal salah
+			continue
 		}
 
-		selisihHari := int(kadaluwarsa.Sub(time.Now()).Hours() / 24)
+		// Hitung selisih hari
+		selisih := int(kadaluwarsa.Sub(today).Hours() / 24)
+		status := ""
 
-		if selisihHari < 0 {
-			// Bahan sudah kadaluwarsa
-			bahanKadaluwarsa = append(bahanKadaluwarsa, bahan)
-			fmt.Printf("❌ %-15s | SUDAH KADALUWARSA | %s\n",
-				bahan.nama, bahan.kadaluwarsa)
-			count++
-		} else if selisihHari <= 7 {
-			// Bahan akan kadaluwarsa dalam 7 hari
-			bahanKadaluwarsa = append(bahanKadaluwarsa, bahan)
-			fmt.Printf("⚠️  %-15s | %2d hari lagi     | %s\n",
-				bahan.nama, selisihHari, bahan.kadaluwarsa)
-			count++
+		if selisih < 0 {
+			status = "LEWAT KADALUWARSA"
+		} else if selisih == 0 {
+			status = "KADALUWARSA HARI INI"
+		} else if selisih <= 7 {
+			status = fmt.Sprintf("%d HARI", selisih)
+		} else {
+			continue // Lewati bahan yang belum mendekati kadaluwarsa (> 7 hari)
 		}
+
+		fmt.Printf("│ %-4d │ %-14s │ %-20s │ %s │\n", i+1, bahan.nama, status, bahan.kadaluwarsa)
+		count++
 	}
 
 	if count == 0 {
-		fmt.Println("✅ Tidak ada bahan yang akan kadaluwarsa dalam 7 hari ke depan")
+		fmt.Println("├──────┴────────────────┴──────────────────────┴────────────┤")
+		fmt.Println("│ ✓ Tidak ada bahan yang kadaluwarsa hari ini/7 hari/lewat │")
 	} else {
-		fmt.Printf("\nTotal: %d bahan perlu perhatian\n", count)
+		fmt.Println("├──────┴────────────────┴──────────────────────┴────────────┤")
+		fmt.Printf("│ Total: %d bahan perlu perhatian khusus                     │\n", count)
 	}
-	fmt.Println("===============================================")
+	fmt.Println("└───────────────────────────────────────────────────────────┘")
 }
 
 func insertionSort(data []BahanMakanan) []BahanMakanan {
@@ -94,7 +101,7 @@ func tampilkanData(data []BahanMakanan) {
 	fmt.Println("--------------------------------------------------")
 }
 
-func daftarBahanMakanan(data []BahanMakanan) {
+func lihatDaftar(data []BahanMakanan) {
 	var pilihDaftar int
 
 	fmt.Println("\nMau lihat daftar bahan makanan berdasarkan apa?")
@@ -144,9 +151,17 @@ func tambahData(data *[]BahanMakanan) {
 		fmt.Scanln() // Membersihkan buffer input
 	}
 
-	// Input tanggal kadaluwarsa
-	fmt.Print("Masukkan tanggal kadaluwarsa (format: yyyy-mm-dd): ")
-	fmt.Scanln(&kadaluwarsa)
+	// Input tanggal kadaluwarsa dengan validasi
+	for {
+		fmt.Print("Masukkan tanggal kadaluwarsa (format: yyyy-mm-dd): ")
+		fmt.Scanln(&kadaluwarsa)
+		_, err := time.Parse("2006-01-02", kadaluwarsa)
+		if err != nil {
+			fmt.Println("Error: Format tanggal tidak valid. Gunakan format yyyy-mm-dd.")
+			continue
+		}
+		break
+	}
 
 	// Tambahkan data baru
 	*data = append(*data, BahanMakanan{
@@ -155,7 +170,7 @@ func tambahData(data *[]BahanMakanan) {
 		kadaluwarsa: kadaluwarsa,
 	})
 
-	fmt.Println("\n✅ Bahan makanan berhasil ditambahkan!")
+	fmt.Println("\nBahan makanan berhasil ditambahkan!")
 	fmt.Printf("Nama: %s\nStok: %d\nKadaluwarsa: %s\n\n", nama, stok, kadaluwarsa)
 }
 
@@ -164,7 +179,7 @@ func ubahData(data *[]BahanMakanan) {
 	fmt.Print("\n» Masukkan nomor bahan yang akan diubah: ")
 	_, err := fmt.Scanln(&nomor)
 	if err != nil || nomor < 1 || nomor > len(*data) {
-		fmt.Println("❌ Nomor tidak valid")
+		fmt.Println("Nomor tidak valid")
 		return
 	}
 
@@ -176,38 +191,54 @@ func ubahData(data *[]BahanMakanan) {
 	var inputNama, inputStok, inputKadaluwarsa string
 
 	fmt.Println("Masukkan data baru (beri tanda '-' jika tidak ingin mengubah):")
+
+	// Input Nama
 	fmt.Print("Nama : ")
 	fmt.Scanln(&inputNama)
-	fmt.Print("Jumlah Stok : ")
-	fmt.Scanln(&inputStok)
-	fmt.Print("Tanggal Kadaluwarsa : ")
-	fmt.Scanln(&inputKadaluwarsa)
-
-	// Ubah data jika input bukan "-"
 	if inputNama != "-" {
 		bahan.nama = inputNama
 	}
-	if inputStok != "-" {
+
+	// Input Stok
+	for {
+		fmt.Print("Jumlah Stok : ")
+		fmt.Scanln(&inputStok)
+		if inputStok == "-" {
+			break
+		}
 		var stokBaru int
-		_, err := fmt.Scanf(inputStok, "%d", &stokBaru)
-		if err == nil {
+		_, err := fmt.Sscanf(inputStok, "%d", &stokBaru)
+		if err == nil && stokBaru >= 0 {
 			bahan.stok = stokBaru
+			break
 		} else {
-			fmt.Println("❌ Input stok tidak valid, tidak diubah.")
+			fmt.Println("Input stok tidak valid. Masukkan angka atau '-' untuk batal.")
 		}
 	}
-	if inputKadaluwarsa != "-" {
-		bahan.kadaluwarsa = inputKadaluwarsa
+
+	// Input Kadaluwarsa
+	for {
+		fmt.Print("Tanggal Kadaluwarsa (format yyyy-mm-dd): ")
+		fmt.Scanln(&inputKadaluwarsa)
+		if inputKadaluwarsa == "-" {
+			break
+		}
+		if _, err := time.Parse("2025-05-25", inputKadaluwarsa); err == nil {
+			bahan.kadaluwarsa = inputKadaluwarsa
+			break
+		} else {
+			fmt.Println("Format tanggal tidak valid. Coba lagi atau masukkan '-' untuk batal.")
+		}
 	}
 
-	fmt.Printf("\n✅ Data berhasil diubah:\nNama: %s\nStok: %d\nKadaluwarsa: %s\n\n",
+	fmt.Printf("\nData berhasil diubah:\nNama: %s\nStok: %d\nKadaluwarsa: %s\n\n",
 		bahan.nama, bahan.stok, bahan.kadaluwarsa)
 }
 
 func hapusData(data *[]BahanMakanan) {
 	// Cek jika data kosong
 	if len(*data) == 0 {
-		fmt.Println("\n❌ Tidak ada data bahan makanan yang bisa dihapus")
+		fmt.Println("\nTidak ada data bahan makanan yang bisa dihapus")
 		return
 	}
 
@@ -216,13 +247,13 @@ func hapusData(data *[]BahanMakanan) {
 	fmt.Print("Masukkan nomor bahan yang akan dihapus: ")
 	_, err := fmt.Scanln(&nomor)
 	if err != nil {
-		fmt.Println("\n❌ Input tidak valid")
+		fmt.Println("\nInput tidak valid")
 		return
 	}
 
 	// Validasi nomor
 	if nomor < 1 || nomor > len(*data) {
-		fmt.Println("\n❌ Nomor tidak valid")
+		fmt.Println("\nNomor tidak valid")
 		return
 	}
 
@@ -233,7 +264,7 @@ func hapusData(data *[]BahanMakanan) {
 	}
 	*data = (*data)[:len(*data)-1]
 
-	fmt.Printf("\n✅ Bahan makanan '%s' berhasil dihapus\n", bahanTerhapus)
+	fmt.Printf("\nBahan makanan '%s' berhasil dihapus\n", bahanTerhapus)
 }
 
 func laporanStok(data []BahanMakanan) {
@@ -251,7 +282,7 @@ func laporanStok(data []BahanMakanan) {
 	}
 
 	// Tampilkan ringkasan
-	fmt.Println("\n📦 Laporan Stok Bahan Makanan")
+	fmt.Println("\nLaporan Stok Bahan Makanan")
 	fmt.Println("===============================================")
 	fmt.Printf("Total Bahan Makanan        : %d\n", total)
 	fmt.Printf("Bahan Tersedia (stok > 0)  : %d\n", tersedia)
@@ -259,12 +290,12 @@ func laporanStok(data []BahanMakanan) {
 	fmt.Println("===============================================\n")
 
 	if total == 0 {
-		fmt.Println("❗ Tidak ada data bahan makanan.")
+		fmt.Println("Tidak ada data bahan makanan.")
 		return
 	}
 
 	// Tampilkan bahan tersedia
-	fmt.Println("✅ Daftar Bahan Tersedia:")
+	fmt.Println("Daftar Bahan Tersedia:")
 	fmt.Printf("%-5s %-20s %-10s %-15s\n", "No", "Nama", "Stok", "Kadaluwarsa")
 	fmt.Println("------------------------------------------------------------")
 	no := 1
@@ -275,9 +306,7 @@ func laporanStok(data []BahanMakanan) {
 		}
 	}
 	fmt.Println("------------------------------------------------------------\n")
-
-	// Tampilkan bahan yang telah digunakan
-	fmt.Println("❌ Daftar Bahan Telah Digunakan (Stok = 0):")
+	fmt.Println("Daftar Bahan Telah Digunakan (Stok = 0):")
 	fmt.Printf("%-5s %-20s %-10s %-15s\n", "No", "Nama", "Stok", "Kadaluwarsa")
 	fmt.Println("------------------------------------------------------------")
 	no = 1
@@ -435,31 +464,39 @@ func main() {
 	for {
 		fmt.Println("\nSelamat Datang di ✨ Aplikasi Manajeman Stok Bahan Makanan ✨")
 
-		fmt.Println("\nDaftar Bahan Makanan")
-		fmt.Println("===============================================")
-		fmt.Printf("%-3s | %-15s | %-5s | %-15s\n",
+		fmt.Println("╔───────────────────────────────────────────────────────╗")
+		fmt.Println("                Daftar Bahan Makanan                    ")
+		fmt.Println("╚═══════════════════════════════════════════════════════╝")
+		fmt.Println("┌─────┬──────────────────┬────────┬───────────────────┐")
+		fmt.Printf("│ %-3s │ %-16s │ %-5s  │ %-17s │\n",
 			"No.", "Nama Bahan", "Stok", "Kadaluwarsa")
-		fmt.Println("===============================================")
+		fmt.Println("├─────┼──────────────────┼────────┼───────────────────┤")
 		for i := 0; i < len(data); i++ {
-			fmt.Printf("%-3d | %-15s | %-5d | %-15s\n",
+			fmt.Printf("│ %-3d │ %-16s │ %-5d  │ %-17s │\n",
 				i+1, data[i].nama, data[i].stok, data[i].kadaluwarsa)
 		}
-		fmt.Println("===============================================")
+		fmt.Println("└─────┴──────────────────┴────────┴───────────────────┘")
 
-		fmt.Println("Daftar Fitur:")
-		fmt.Println("1. Lihat Daftar Bahan Makanan")
-		fmt.Println("2. Tambah Data Bahan Makanan")
-		fmt.Println("3. Ubah Data Bahan Makanan")
-		fmt.Println("4. Hapus Bahan Makanan")
-		fmt.Println("5. Cari Bahan Makanan")
-		fmt.Println("6. Laporan Stok Bahan Makanan")
+		fmt.Println("╔════════════════════════════════════════════╗")
+		fmt.Println("║              FITUR APLIKASI                ║")
+		fmt.Println("╠════════════════════════════════════════════╣")
+		fmt.Println("║   📋 Lihat Daftar Bahan Makanan            ║")
+		fmt.Println("║   ➕ Tambah Data Bahan Makanan             ║")
+		fmt.Println("║   ✏️  Ubah Data Bahan Makanan               ║")
+		fmt.Println("║   🗑️  Hapus Bahan Makanan                   ║")
+		fmt.Println("║   🔍 Cari Bahan Makanan                    ║")
+		fmt.Println("║   📊 Laporan Stok Bahan Makanan            ║")
+		fmt.Println("╠════════════════════════════════════════════╣")
+		fmt.Println("║   🚪 Keluar                                ║")
+		fmt.Println("╚════════════════════════════════════════════╝")
+
 		tampilkanReminder(data)
 		fmt.Print("Pilih menu: ")
 		fmt.Scanln(&pilihMenu)
 
 		switch pilihMenu {
 		case 1:
-			daftarBahanMakanan(data)
+			lihatDaftar(data)
 		case 2:
 			tambahData(&data)
 		case 3:
@@ -475,7 +512,7 @@ func main() {
 		}
 
 		if !konfirmasiKembali() {
-			fmt.Println("Terima kasih sudah menggunakan program ini 🙌")
+			fmt.Println("Terima kasih telah menggunakan aplikasi ini 🙌")
 			return
 		}
 	}
