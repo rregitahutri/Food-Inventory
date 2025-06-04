@@ -242,7 +242,7 @@ func ubahData(data *[]BahanMakanan) {
 		if inputKadaluwarsa == "-" {
 			break
 		}
-		if _, err := time.Parse("2025-05-25", inputKadaluwarsa); err == nil {
+		if _, err := time.Parse("2006-01-02", inputKadaluwarsa); err == nil {
 			bahan.kadaluwarsa = inputKadaluwarsa
 			break
 		} else {
